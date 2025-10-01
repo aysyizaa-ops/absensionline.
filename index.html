@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Absensi Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.6);
+            transition: opacity 0.3s ease;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="app" class="min-h-screen flex items-center justify-center transition-opacity duration-500">
+        <!-- App content will be rendered here by JavaScript -->
+    </div>
+
+    <script>
+        // === STATE MANAGEMENT & MOCK DATA ===
+        const state = {
+            currentPage: 'login', // 'login', 'siswaDashboard', 'guruDashboard'
+            currentUser: null,
+            users: [
+                { username: 'siswa1', password: '123', role: 'siswa', name: 'Budi Santoso', kelas: 'XII IPA 1', noAbsen: 10 },
+                { username: 'siswa2', password: '123', role: 'siswa', name: 'Ani Yudhoyono', kelas: 'XII IPA 1', noAbsen: 5 },
+                { username: 'siswa3', password: '123', role: 'siswa', name: 'Charlie van Houten', kelas: 'XII IPA 2', noAbsen: 12 },
+                { username: 'guru', password: 'guru123', role: 'guru', name: 'Zahra' },
+            ],
+            attendance: [
+                // Data absensi untuk bulan September 2025 untuk demo
+                { username: 'siswa1', date: '2025-09-01', checkIn: '07:30', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/a7f3d0/31343c?text=Selfie+Budi' },
+                { username: 'siswa2', date: '2025-09-01', checkIn: '07:25', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/a5b4fc/31343c?text=Selfie+Ani' },
+                { username: 'siswa3', date: '2025-09-01', checkIn: '07:40', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fde047/31343c?text=Selfie+Charlie' },
+                { username: 'siswa1', date: '2025-09-02', checkIn: '07:35', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/a7f3d0/31343c?text=Selfie+Budi' },
+                { username: 'siswa2', date: '2025-09-02', checkIn: '08:10', checkOut: '15:00', status: 'Terlambat', checkInProof: 'https://placehold.co/400x400/a5b4fc/31343c?text=Selfie+Ani' },
+                { username: 'siswa3', date: '2025-09-02', checkIn: '07:30', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fde047/31343c?text=Selfie+Charlie' },
+                { username: 'siswa1', date: '2025-09-03', checkIn: '07:20', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/a7f3d0/31343c?text=Selfie+Budi' },
+                { username: 'siswa2', date: '2025-09-03', checkIn: null, checkOut: null, status: 'Izin' }, // Izin disetujui
+                { username: 'siswa3', date: '2025-09-03', checkIn: '07:30', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fde047/31343c?text=Selfie+Charlie' },
+                { username: 'siswa3', date: '2025-09-24', checkIn: '08:15', checkOut: '15:30', status: 'Terlambat', checkInProof: 'https://placehold.co/400x400/fde047/31343c?text=Selfie+Charlie' },
+            ],
+            permissions: [
+                 { id: 1, username: 'siswa2', date: '2025-09-24', type: 'Sakit', reason: 'Sakit, surat dokter terlampir.', status: 'Disetujui', proofImage: 'https://placehold.co/600x400/EEE/31343C?text=Contoh+Surat+Dokter' },
+                 { id: 2, username: 'siswa1', date: getCurrentDate(), type: 'Sakit', reason: 'Demam tinggi, butuh istirahat.', status: 'Menunggu Persetujuan', proofImage: 'https://placehold.co/600x800/EEE/31343C?text=Surat+Izin+Sakit' },
+                 { id: 3, username: 'siswa2', date: '2025-09-03', type: 'Izin', reason: 'Acara keluarga', status: 'Disetujui', proofImage: null },
+                 { id: 4, username: 'siswa3', date: '2025-09-05', type: 'Izin', reason: 'Tidak jelas', status: 'Ditolak', proofImage: null }, // Ini akan dihitung sebagai Alpa
+            ],
+            schedules: [
+                { day: 'Senin', subject: 'Upacara & Pelajaran', time: '06:30 - 15:00', teacher: 'Zahra' },
+                { day: 'Selasa', subject: 'Pelajaran Penuh', time: '06:30 - 15:00', teacher: 'Zahra' },
+                { day: 'Rabu', subject: 'Pelajaran Penuh', time: '06:30 - 15:00', teacher: 'Zahra' },
+                { day: 'Kamis', subject: 'Pelajaran Penuh', time: '06:30 - 15:00', teacher: 'Zahra' },
+                { day: 'Jumat', subject: 'Pelajaran & Ekstrakurikuler', time: '06:30 - 15:00', teacher: 'Zahra' },
+            ],
+            showModal: false,
+            modalContent: { title: '', body: '' },
+            showImageModal: false,
+            imageModalUrl: '',
+            guruView: 'daily', // 'daily' or 'monthly'
+        };
+
+        // === UTILITY FUNCTIONS ===
+        function getCurrentDate() {
+            // Untuk demo, kita set tanggal statis agar data mock 'permissions' selalu relevan.
+            return '2025-09-25'; 
+        }
+        const getCurrentTime = () => new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+
+        // === APP ROOT & ROUTING ===
+        const app = document.getElementById('app');
+
+        function render() {
+            app.innerHTML = '';
+            const existingModal = document.querySelector('.modal-backdrop');
+            if (existingModal) existingModal.remove();
+
+            switch(state.currentPage) {
+                case 'login':
+                    app.innerHTML = LoginPage();
+                    attachLoginListeners();
+                    break;
+                case 'siswaDashboard':
+                    app.innerHTML = SiswaDashboard();
+                    attachSiswaListeners();
+                    break;
+                case 'guruDashboard':
+                    app.innerHTML = GuruDashboard();
+                    attachGuruListeners();
+                    break;
+            }
+            if (state.showModal) {
+                const modal = Modal(state.modalContent.title, state.modalContent.body);
+                document.body.insertAdjacentHTML('beforeend', modal);
+                document.getElementById('modal-backdrop').addEventListener('click', closeModal);
+                document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+            }
+            if (state.showImageModal) {
+                const imageModal = ImageModal(state.imageModalUrl);
+                document.body.insertAdjacentHTML('beforeend', imageModal);
+                document.getElementById('image-modal-backdrop').addEventListener('click', closeImageModal);
+                document.getElementById('close-image-modal-btn').addEventListener('click', closeImageModal);
+            }
+        }
+
+        // === AUTHENTICATION LOGIC ===
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = e.target.username.value;
+            const password = e.target.password.value;
+            const user = state.users.find(u => u.username === username && u.password === password);
+            if (user) {
+                state.currentUser = user;
+                state.currentPage = user.role === 'siswa' ? 'siswaDashboard' : 'guruDashboard';
+            } else {
+                showModal('Login Gagal', '<p class="text-red-500">Username atau password salah.</p>');
+            }
+            render();
+        }
+
+        function handleLogout() {
+            state.currentUser = null;
+            state.currentPage = 'login';
+            render();
+        }
+
+        // === SISWA LOGIC ===
+        function promptForCheckInProof() {
+            const today = getCurrentDate();
+            const existingRecord = state.attendance.find(a => a.username === state.currentUser.username && a.date === today);
+            if (existingRecord) { showModal('Informasi', '<p>Anda sudah melakukan check-in hari ini.</p>'); return; }
+
+            const modalBody = `
+                <p class="text-sm text-gray-600 mb-4">Silakan ambil foto selfie sebagai bukti kehadiran.</p>
+                <form id="checkin-proof-form">
+                    <input type="file" id="checkin-proof-input" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100" required>
+                    <img id="checkin-image-preview" src="" class="mt-4 rounded-md max-h-48 hidden mx-auto"/>
+                    <p id="checkin-error" class="text-red-500 text-sm mt-2 text-center"></p>
+                    <button type="submit" class="mt-4 w-full gradient-bg text-white font-bold py-2 px-4 rounded-lg">Konfirmasi Check-in</button>
+                </form>
+            `;
+            showModal('Bukti Kehadiran', modalBody);
+
+            setTimeout(() => {
+                const input = document.getElementById('checkin-proof-input');
+                const preview = document.getElementById('checkin-image-preview');
+                const form = document.getElementById('checkin-proof-form');
+
+                if (input && preview && form) {
+                    input.addEventListener('change', (event) => {
+                        const file = event.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                preview.src = e.target.result;
+                                preview.classList.remove('hidden');
+                            }
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                    form.addEventListener('submit', (e) => { e.preventDefault(); handleConfirmCheckIn(); });
+                }
+            }, 0);
+        }
+
+        function handleConfirmCheckIn() {
+            const preview = document.getElementById('checkin-image-preview');
+            const proofImage = (preview && preview.src.startsWith('data:image')) ? preview.src : null;
+            const errorEl = document.getElementById('checkin-error');
+
+            if (!proofImage) {
+                if (errorEl) errorEl.textContent = 'Harap unggah foto bukti terlebih dahulu.';
+                return;
+            }
+            if (errorEl) errorEl.textContent = '';
+            
+            const today = getCurrentDate();
+            const checkInTime = getCurrentTime();
+            state.attendance.push({
+                username: state.currentUser.username,
+                date: today,
+                checkIn: checkInTime,
+                checkOut: null,
+                status: checkInTime <= '08:00' ? 'Hadir' : 'Terlambat',
+                checkInProof: proofImage
+            });
+            
+            closeModal();
+            setTimeout(() => {
+                showModal('Berhasil', `<p class="text-green-500">Check-in berhasil pada pukul ${checkInTime}.</p>`);
+                render();
+            }, 100);
+        }
+
+        function handleCheckOut() {
+            const today = getCurrentDate();
+            const record = state.attendance.find(a => a.username === state.currentUser.username && a.date === today);
+            if (!record) { showModal('Gagal', '<p>Anda harus check-in terlebih dahulu.</p>'); return; }
+            if (record.checkOut) { showModal('Informasi', '<p>Anda sudah melakukan check-out hari ini.</p>'); return; }
+            record.checkOut = getCurrentTime();
+            showModal('Berhasil', `<p class="text-green-500">Check-out berhasil pada pukul ${record.checkOut}.</p>`);
+            render();
+        }
+        
+        function handleImagePreview(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('image-preview');
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handlePermissionSubmit(e) {
+            e.preventDefault();
+            const date = e.target.date.value;
+            const type = e.target.type.value;
+            const reason = e.target.reason.value;
+            const proofImageSrc = document.getElementById('image-preview').src;
+            const proofImage = proofImageSrc.startsWith('data:image') ? proofImageSrc : null;
+
+            if (!date || !reason) { showModal('Gagal', '<p>Tanggal dan alasan wajib diisi.</p>'); return; }
+
+            state.permissions.push({
+                id: Date.now(),
+                username: state.currentUser.username,
+                date, type, reason, proofImage,
+                status: 'Menunggu Persetujuan'
+            });
+            showModal('Berhasil', `<p class="text-green-500">Pengajuan ${type} berhasil dikirim.</p>`);
+            render();
+        }
+
+        // === GURU LOGIC ===
+        function switchGuruView(view) {
+            state.guruView = view;
+            render();
+        }
+
+        function handleApprovePermission(permissionId) {
+            const permission = state.permissions.find(p => p.id === permissionId);
+            if (!permission) return;
+            permission.status = 'Disetujui';
+            let attendanceRecord = state.attendance.find(a => a.username === permission.username && a.date === permission.date);
+            if (attendanceRecord) {
+                attendanceRecord.status = permission.type;
+            } else {
+                state.attendance.push({ username: permission.username, date: permission.date, checkIn: null, checkOut: null, status: permission.type, checkInProof: null });
+            }
+            showModal('Berhasil', `<p>Pengajuan ${permission.type} untuk ${permission.username} disetujui.</p>`);
+            render();
+        }
+
+        function handleRejectPermission(permissionId) {
+            const permission = state.permissions.find(p => p.id === permissionId);
+            if (permission) {
+                permission.status = 'Ditolak';
+                showModal('Berhasil', `<p>Pengajuan untuk ${permission.username} ditolak.</p>`);
+            }
+            render();
+        }
+
+        function handleDownloadReport() {
+            const students = state.users.filter(u => u.role === 'siswa');
+            let csvContent = "data:text/csv;charset=utf-8,Nama Siswa,Kelas,No Absen,Tanggal,Check In,Check Out,Status\r\n";
+            state.attendance.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(att => {
+                const student = students.find(s => s.username === att.username);
+                if(student){ csvContent += `${student.name},${student.kelas},${student.noAbsen},${att.date},${att.checkIn || ''},${att.checkOut || ''},${att.status}\r\n`; }
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "laporan_absensi.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // === MODAL LOGIC ===
+        function showModal(title, body) { state.showModal = true; state.modalContent = { title, body }; render(); }
+        function closeModal() { state.showModal = false; render(); }
+        function showImageModal(imageUrl) { state.showImageModal = true; state.imageModalUrl = imageUrl; render(); }
+        function closeImageModal() { state.showImageModal = false; state.imageModalUrl = ''; render(); }
+
+        // === TEMPLATES / COMPONENTS ===
+        function LoginPage() {
+            return `<div class="w-full max-w-md mx-auto"><div class="bg-white shadow-2xl rounded-2xl px-8 pt-6 pb-8 mb-4"><div class="text-center mb-8"><i class="fas fa-user-check text-5xl text-pink-500"></i><h1 class="text-3xl font-bold text-gray-800 mt-2">Absensi Online</h1><p class="text-gray-500">Silakan login ke akun Anda</p></div><form id="login-form"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="username">Username</label><input class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="username" type="text" placeholder="Username" required></div><div class="mb-6"><label class="block text-gray-700 text-sm font-bold mb-2" for="password">Password</label><input class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="password" type="password" placeholder="******************" required></div><button class="gradient-bg w-full text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transform hover:scale-105 transition-transform duration-300" type="submit">Login</button></form><div class="mt-6 text-xs text-center text-gray-500"><p class="font-bold">Akun Demo:</p><p>Siswa: (username: siswa1, pass: 123)</p><p>Guru: (username: guru, pass: guru123)</p></div></div></div>`;
+        }
+
+        function SiswaDashboard() {
+            const userAttendance = state.attendance.filter(a => a.username === state.currentUser.username).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const todayRecord = userAttendance.find(a => a.date === getCurrentDate());
+            return `<div class="container mx-auto p-4 md:p-8 w-full max-w-6xl"><header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"><div><h1 class="text-3xl font-bold text-gray-800">Selamat Datang, ${state.currentUser.name}</h1><p class="text-gray-500">Kelas: ${state.currentUser.kelas} | No. Absen: ${state.currentUser.noAbsen}</p></div><button id="logout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 self-start md:self-center"><i class="fas fa-sign-out-alt mr-2"></i> Logout</button></header><main class="grid grid-cols-1 lg:grid-cols-5 gap-8"><div class="lg:col-span-3 space-y-8"><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-xl font-bold mb-4 text-gray-700">Absensi Hari Ini</h2><div class="flex flex-col md:flex-row gap-4"><button id="checkin-btn" class="flex-1 bg-green-500 text-white font-bold py-4 px-6 rounded-lg text-lg hover:bg-green-600 transition-colors duration-300 disabled:bg-gray-400" ${todayRecord && todayRecord.checkIn ? 'disabled' : ''}><i class="fas fa-fingerprint mr-2"></i> Check-in</button><button id="checkout-btn" class="flex-1 bg-blue-500 text-white font-bold py-4 px-6 rounded-lg text-lg hover:bg-blue-600 transition-colors duration-300 disabled:bg-gray-400" ${!todayRecord || (todayRecord && todayRecord.checkOut) ? 'disabled' : ''}><i class="fas fa-door-open mr-2"></i> Check-out</button></div></div><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-xl font-bold mb-4 text-gray-700">Riwayat Kehadiran</h2><div class="overflow-x-auto max-h-96"><table class="w-full text-left"><thead class="sticky top-0 bg-gray-100"><tr><th class="p-3 font-semibold">Tanggal</th><th class="p-3 font-semibold">Check-in</th><th class="p-3 font-semibold">Check-out</th><th class="p-3 font-semibold">Status</th></tr></thead><tbody>${userAttendance.length > 0 ? userAttendance.map(att => `<tr class="border-b"><td class="p-3">${att.date}</td><td class="p-3">${att.checkIn || '-'}</td><td class="p-3">${att.checkOut || '-'}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${att.status === 'Hadir' ? 'bg-green-100 text-green-800' : att.status === 'Terlambat' ? 'bg-yellow-100 text-yellow-800' : att.status === 'Izin' ? 'bg-blue-100 text-blue-800' : att.status === 'Sakit' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}">${att.status}</span></td></tr>`).join('') : `<tr><td colspan="4" class="text-center p-4 text-gray-500">Tidak ada riwayat.</td></tr>`}</tbody></table></div></div></div><div class="lg:col-span-2"><div class="bg-white p-6 rounded-2xl shadow-lg"><h2 class="text-xl font-bold mb-4 text-gray-700">Ajukan Izin / Sakit</h2><form id="permission-form" class="space-y-4"><div><label for="date" class="block text-sm font-medium text-gray-700">Tanggal</label><input type="date" id="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required></div><div><label for="type" class="block text-sm font-medium text-gray-700">Tipe</label><select id="type" name="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"><option>Izin</option><option>Sakit</option></select></div><div><label for="reason" class="block text-sm font-medium text-gray-700">Alasan</label><textarea id="reason" name="reason" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" placeholder="Tuliskan alasan Anda..." required></textarea></div><div><label for="proof" class="block text-sm font-medium text-gray-700">Bukti Foto (Opsional)</label><input type="file" id="proof" name="proof" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"><img id="image-preview" src="" alt="Image Preview" class="mt-2 rounded-md max-h-32 hidden"/></div><button type="submit" class="w-full justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700">Kirim Pengajuan</button></form></div></div></main></div>`;
+        }
+        
+        function GuruDashboard() {
+            const students = state.users.filter(u => u.role === 'siswa');
+            const today = getCurrentDate();
+            
+            // Monthly Report Logic
+            let monthlyReportHtml = '';
+            if (state.guruView === 'monthly') {
+                const todayDate = new Date(getCurrentDate());
+                const currentMonth = todayDate.getMonth();
+                const currentYear = todayDate.getFullYear();
+                const monthName = todayDate.toLocaleString('id-ID', { month: 'long' });
+
+                const reportData = students.map(student => {
+                    const studentAttendance = state.attendance.filter(a => { const recordDate = new Date(a.date); return a.username === student.username && recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear; });
+                    const studentPermissions = state.permissions.filter(p => { const recordDate = new Date(p.date); return p.username === student.username && recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear; });
+                    let hadir = studentAttendance.filter(r => r.status === 'Hadir').length;
+                    let terlambat = studentAttendance.filter(r => r.status === 'Terlambat').length;
+                    let izin = studentPermissions.filter(p => p.status === 'Disetujui' && p.type === 'Izin').length;
+                    let sakit = studentPermissions.filter(p => p.status === 'Disetujui' && p.type === 'Sakit').length;
+                    let alpa = studentPermissions.filter(p => p.status === 'Ditolak').length;
+                    const score = (hadir * 2) + (terlambat * 1) - (alpa * 2);
+                    return { ...student, hadir, terlambat, izin, sakit, alpa, score };
+                });
+
+                reportData.sort((a, b) => b.score - a.score);
+                monthlyReportHtml = `<h2 class="text-xl font-bold text-gray-700 mb-4">Peringkat Kehadiran Bulan ${monthName}</h2><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-100"><tr><th class="p-3 font-semibold text-center">Peringkat</th><th class="p-3 font-semibold">Siswa</th><th class="p-3 font-semibold text-center">Hadir</th><th class="p-3 font-semibold text-center">Terlambat</th><th class="p-3 font-semibold text-center">Izin</th><th class="p-3 font-semibold text-center">Sakit</th><th class="p-3 font-semibold text-center">Alpa</th></tr></thead><tbody>${reportData.map((data, index) => `<tr class="border-b"><td class="p-3 font-bold text-center text-lg">${index + 1}</td><td class="p-3"><p class="font-medium">${data.name}</p><p class="text-xs text-gray-500">Kelas: ${data.kelas} | No: ${data.noAbsen}</p></td><td class="p-3 text-center">${data.hadir}</td><td class="p-3 text-center">${data.terlambat}</td><td class="p-3 text-center">${data.izin}</td><td class="p-3 text-center">${data.sakit}</td><td class="p-3 text-center text-red-500 font-bold">${data.alpa}</td></tr>`).join('')}</tbody></table></div>`;
+            }
+
+            // Daily Report HTML
+            const dailyReportHtml = `<div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-gray-700">Laporan Harian & Persetujuan (${today})</h2><button id="download-report-btn" class="bg-pink-500 hover:bg-pink-600 text-white text-sm font-bold py-2 px-3 rounded-lg"><i class="fas fa-download mr-2"></i> Unduh Laporan</button></div><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-100"><tr><th class="p-3 font-semibold">Siswa</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Keterangan / Aksi</th></tr></thead><tbody>${students.map(student => { const attendanceRecord = state.attendance.find(a => a.username === student.username && a.date === today); const permissionRecord = state.permissions.find(p => p.username === student.username && p.date === today); let status = 'Alpa'; let statusColor = 'bg-red-100 text-red-800'; let keteranganHtml = '<p class="text-sm text-gray-500">-</p>'; if (attendanceRecord) { status = attendanceRecord.status; if (status === 'Hadir') statusColor = 'bg-green-100 text-green-800'; else if (status === 'Terlambat') statusColor = 'bg-yellow-100 text-yellow-800'; else if (status === 'Izin') statusColor = 'bg-blue-100 text-blue-800'; else if (status === 'Sakit') statusColor = 'bg-orange-100 text-orange-800'; const proofButton = attendanceRecord.checkInProof ? `<button onclick="showImageModal('${attendanceRecord.checkInProof}')" class="ml-2 text-pink-500 hover:text-pink-700 text-sm"><i class="fas fa-camera"></i></button>` : ''; keteranganHtml = `<div class="flex items-center"><p class="text-sm">Check-in: ${attendanceRecord.checkIn || '-'}</p>${proofButton}</div>`; } else if (permissionRecord) { if (permissionRecord.status === 'Menunggu Persetujuan') { status = 'Menunggu Persetujuan'; statusColor = 'bg-purple-100 text-purple-800'; keteranganHtml = `<div><p class="text-sm italic">"${permissionRecord.reason}"</p><div class="mt-2 flex items-center justify-start gap-2">${permissionRecord.proofImage ? `<button onclick="showImageModal('${permissionRecord.proofImage}')" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold py-1 px-3 rounded-lg"><i class="fas fa-camera"></i> Bukti</button>` : ''}<button onclick="handleApprovePermission(${permissionRecord.id})" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded-lg">Setujui</button><button onclick="handleRejectPermission(${permissionRecord.id})" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-lg">Tolak</button></div></div>`; } else if (permissionRecord.status === 'Disetujui') { status = permissionRecord.type; statusColor = status === 'Sakit' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'; keteranganHtml = `<div class="flex items-center gap-2"><p class="text-sm italic">"${permissionRecord.reason}"</p> ${permissionRecord.proofImage ? `<button onclick="showImageModal('${permissionRecord.proofImage}')" class="text-pink-500 hover:text-pink-700 text-sm"><i class="fas fa-camera"></i></button>` : ''}</div>`; } else if (permissionRecord.status === 'Ditolak') { status = 'Alpa (Izin Ditolak)'; keteranganHtml = `<p class="text-sm text-gray-500 italic">"${permissionRecord.reason}"</p>`; } } return `<tr class="border-b"><td class="p-3 align-top"><p class="font-medium">${student.name}</p><p class="text-xs text-gray-500">Kelas: ${student.kelas} | No: ${student.noAbsen}</p></td><td class="p-3 align-top"><span class="px-2 py-1 rounded-full text-xs font-semibold ${statusColor}">${status}</span></td><td class="p-3 align-top">${keteranganHtml}</td></tr>`; }).join('')}</tbody></table></div>`;
+            
+            return `
+                <div class="container mx-auto p-4 md:p-8 w-full max-w-7xl">
+                    <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                        <div><h1 class="text-3xl font-bold text-gray-800">Selamat Datang, ${state.currentUser.name}</h1><p class="text-gray-500">Dashboard Guru</p></div>
+                        <button id="logout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg self-start md:self-center"><i class="fas fa-sign-out-alt mr-2"></i> Logout</button>
+                    </header>
+                    <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2">
+                             <div class="bg-white p-6 rounded-2xl shadow-lg">
+                                <div class="flex border-b mb-4">
+                                    <button onclick="switchGuruView('daily')" class="py-2 px-4 transition-colors duration-300 ${state.guruView === 'daily' ? 'border-b-2 border-pink-500 font-semibold text-pink-600' : 'text-gray-500 hover:text-pink-600'}">Laporan Harian</button>
+                                    <button onclick="switchGuruView('monthly')" class="py-2 px-4 transition-colors duration-300 ${state.guruView === 'monthly' ? 'border-b-2 border-pink-500 font-semibold text-pink-600' : 'text-gray-500 hover:text-pink-600'}">Rekap Bulanan</button>
+                                </div>
+                                ${state.guruView === 'daily' ? dailyReportHtml : monthlyReportHtml}
+                           </div>
+                        </div>
+                        <div class="lg:col-span-1">
+                             <div class="bg-white p-6 rounded-2xl shadow-lg">
+                                 <h2 class="text-xl font-bold mb-4 text-gray-700">Jadwal Mengajar</h2>
+                                 <div class="space-y-4">${state.schedules.map(sch => `<div class="border-l-4 border-pink-500 pl-4 py-2 bg-pink-50 rounded-r-lg"><p class="font-bold">${sch.day} - ${sch.subject}</p><p class="text-sm text-gray-600">${sch.time}</p></div>`).join('')}</div>
+                             </div>
+                        </div>
+                    </main>
+                </div>
+            `;
+        }
+
+        function Modal(title, body) {
+            return `<div id="modal-backdrop" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative"><button id="close-modal-btn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800"><i class="fas fa-times text-xl"></i></button><h3 class="text-xl font-bold mb-4">${title}</h3><div class="text-gray-700">${body}</div></div></div>`;
+        }
+        
+        function ImageModal(imageUrl) {
+            return `<div id="image-modal-backdrop" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"><div class="relative"><button id="close-image-modal-btn" class="absolute -top-3 -right-3 text-white bg-black bg-opacity-50 rounded-full h-8 w-8 flex items-center justify-center hover:bg-opacity-75"><i class="fas fa-times"></i></button><img src="${imageUrl}" class="max-w-screen-sm max-h-[80vh] rounded-lg shadow-2xl object-contain"/></div></div>`;
+        }
+
+        // === EVENT LISTENERS ATTACHMENT ===
+        function attachLoginListeners() { document.getElementById('login-form').addEventListener('submit', handleLogin); }
+        function attachSiswaListeners() {
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            document.getElementById('checkin-btn').addEventListener('click', promptForCheckInProof);
+            document.getElementById('checkout-btn').addEventListener('click', handleCheckOut);
+            document.getElementById('permission-form').addEventListener('submit', handlePermissionSubmit);
+            document.getElementById('proof').addEventListener('change', handleImagePreview);
+        }
+        function attachGuruListeners() { 
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            if (document.getElementById('download-report-btn')) {
+                document.getElementById('download-report-btn').addEventListener('click', handleDownloadReport);
+            }
+        }
+        
+        // === INITIAL RENDER ===
+        window.addEventListener('load', render);
+    </script>
+</body>
+</html>
+
+
