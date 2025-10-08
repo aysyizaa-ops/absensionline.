@@ -31,40 +31,105 @@
 
     <script>
         // === STATE MANAGEMENT & MOCK DATA ===
+        const studentNames = [
+            "Aldebaran Adam Syahputra", "Anzillah Nurcahaya", "Aulia Danish", "Chairil Ahmad Fathir", "Daiva Bhagja Wangsapriyatman",
+            "Dellaluna Nur Agustina", "Denian Prasetya", "Fadhillah Nursyifa", "Ghaisan Rafani", "Hasna Fauziah Aqila",
+            "Heni Ramadhani", "Iyan Apriansa", "Keihsa Anindya Danastri H", "Kintan Putri Haryono", "Muhamad Fajri Bakkah",
+            "Muhamad Farhan", "Muhammad Nabil Fadlurrohman", "Muhammad Ridhan Fajari", "Muhammad Rizqy Irza Saputra",
+            "Nadia Aprianca Putri", "Naisya Aufiya Indri", "Nasya Tri Febriyani", "Naya Nardiana", "Nur Maya Aini",
+            "Puspita Widia Kusumaningsih", "Puteri Rosmayanti", "Rafa Yanwardi Azhar", "Raka Alif Al Aziz", "Resti Julianti",
+            "Siti Nurmalia Ramadhan", "Sultan Fardhan Anggestu", "Sumayyah Dema Nazihah", "Syafira Ramadhani",
+            "Syakilla Insan Sabria", "Syifa Amelia Dalimunthe", "Zahratunnisa"
+        ];
+        
+        const generatedUsers = studentNames.map((name, index) => ({
+            username: `siswa${index + 1}`,
+            password: '123',
+            role: 'siswa',
+            name: name,
+            kelas: index < 18 ? 'XII IPA 1' : 'XII IPA 2',
+            noAbsen: index + 1
+        }));
+        
         const state = {
             currentPage: 'login', // 'login', 'siswaDashboard', 'guruDashboard'
             currentUser: null,
             users: [
-                { username: 'siswa1', password: '123', role: 'siswa', name: 'Budi Santoso', kelas: 'XII IPA 1', noAbsen: 10 },
-                { username: 'siswa2', password: '123', role: 'siswa', name: 'Ani Yudhoyono', kelas: 'XII IPA 1', noAbsen: 5 },
-                { username: 'siswa3', password: '123', role: 'siswa', name: 'Charlie van Houten', kelas: 'XII IPA 2', noAbsen: 12 },
-                { username: 'guru', password: 'guru123', role: 'guru', name: 'Zahra' },
+                ...generatedUsers,
+                { username: 'guru', password: 'guru123', role: 'guru', name: 'hanna sorta pitauli' },
             ],
             attendance: [
-                // Data absensi untuk bulan September 2025 untuk demo
-                { username: 'siswa1', date: '2025-09-01', checkIn: '07:30', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/a7f3d0/31343c?text=Selfie+Budi' },
-                { username: 'siswa2', date: '2025-09-01', checkIn: '07:25', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/a5b4fc/31343c?text=Selfie+Ani' },
-                { username: 'siswa3', date: '2025-09-01', checkIn: '07:40', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fde047/31343c?text=Selfie+Charlie' },
-                { username: 'siswa1', date: '2025-09-02', checkIn: '07:35', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/a7f3d0/31343c?text=Selfie+Budi' },
-                { username: 'siswa2', date: '2025-09-02', checkIn: '08:10', checkOut: '15:00', status: 'Terlambat', checkInProof: 'https://placehold.co/400x400/a5b4fc/31343c?text=Selfie+Ani' },
-                { username: 'siswa3', date: '2025-09-02', checkIn: '07:30', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fde047/31343c?text=Selfie+Charlie' },
-                { username: 'siswa1', date: '2025-09-03', checkIn: '07:20', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/a7f3d0/31343c?text=Selfie+Budi' },
-                { username: 'siswa2', date: '2025-09-03', checkIn: null, checkOut: null, status: 'Izin' }, // Izin disetujui
-                { username: 'siswa3', date: '2025-09-03', checkIn: '07:30', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fde047/31343c?text=Selfie+Charlie' },
-                { username: 'siswa3', date: '2025-09-24', checkIn: '08:15', checkOut: '15:30', status: 'Terlambat', checkInProof: 'https://placehold.co/400x400/fde047/31343c?text=Selfie+Charlie' },
+                // Demo data for new students
+                { username: 'siswa1', date: '2025-09-01', checkIn: '07:15', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fecaca/31343c?text=Selfie+Siswa' },
+                { username: 'siswa2', date: '2025-09-01', checkIn: '07:25', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fecaca/31343c?text=Selfie+Siswa' },
+                { username: 'siswa5', date: '2025-09-01', checkIn: '08:15', checkOut: '15:00', status: 'Terlambat', checkInProof: 'https://placehold.co/400x400/fecaca/31343c?text=Selfie+Siswa' },
+                { username: 'siswa10', date: '2025-09-01', checkIn: null, checkOut: null, status: 'Sakit' },
+                 { username: 'siswa1', date: '2025-09-02', checkIn: '07:20', checkOut: '15:00', status: 'Hadir', checkInProof: 'https://placehold.co/400x400/fecaca/31343c?text=Selfie+Siswa' },
             ],
             permissions: [
-                 { id: 1, username: 'siswa2', date: '2025-09-24', type: 'Sakit', reason: 'Sakit, surat dokter terlampir.', status: 'Disetujui', proofImage: 'https://placehold.co/600x400/EEE/31343C?text=Contoh+Surat+Dokter' },
-                 { id: 2, username: 'siswa1', date: getCurrentDate(), type: 'Sakit', reason: 'Demam tinggi, butuh istirahat.', status: 'Menunggu Persetujuan', proofImage: 'https://placehold.co/600x800/EEE/31343C?text=Surat+Izin+Sakit' },
-                 { id: 3, username: 'siswa2', date: '2025-09-03', type: 'Izin', reason: 'Acara keluarga', status: 'Disetujui', proofImage: null },
-                 { id: 4, username: 'siswa3', date: '2025-09-05', type: 'Izin', reason: 'Tidak jelas', status: 'Ditolak', proofImage: null }, // Ini akan dihitung sebagai Alpa
+                 { id: 1, username: 'siswa10', date: '2025-09-01', type: 'Sakit', reason: 'Sakit, surat dokter terlampir.', status: 'Disetujui', proofImage: 'https://placehold.co/600x400/EEE/31343C?text=Contoh+Surat+Dokter' },
+                 { id: 2, username: 'siswa15', date: getCurrentDate(), type: 'Izin', reason: 'Ada acara keluarga mendadak.', status: 'Menunggu Persetujuan', proofImage: 'https://placehold.co/600x800/EEE/31343C?text=Surat+Izin' },
             ],
             schedules: [
-                { day: 'Senin', subject: 'Upacara & Pelajaran', time: '06:30 - 15:00', teacher: 'Zahra' },
-                { day: 'Selasa', subject: 'Pelajaran Penuh', time: '06:30 - 15:00', teacher: 'Zahra' },
-                { day: 'Rabu', subject: 'Pelajaran Penuh', time: '06:30 - 15:00', teacher: 'Zahra' },
-                { day: 'Kamis', subject: 'Pelajaran Penuh', time: '06:30 - 15:00', teacher: 'Zahra' },
-                { day: 'Jumat', subject: 'Pelajaran & Ekstrakurikuler', time: '06:30 - 15:00', teacher: 'Zahra' },
+                { 
+                    day: 'Senin', 
+                    details: [
+                        { time: '06:30 - 07:15', subject: 'Upacara' },
+                        { time: '07:15 - 09:30', subject: 'Bahasa Indonesia' },
+                        { time: '09:30 - 09:45', subject: 'Istirahat' },
+                        { time: '09:45 - 12:00', subject: 'Informatika' },
+                        { time: '12:00 - 12:45', subject: 'Istirahat' },
+                        { time: '12:45 - 13:00', subject: 'BK' },
+                        { time: '13:00 - 15:00', subject: 'Geografi' },
+                    ]
+                },
+                {
+                    day: 'Selasa',
+                    details: [
+                        { time: '06:30 - 08:00', subject: 'Bahasa Sunda' },
+                        { time: '08:00 - 09:30', subject: 'Penjas' },
+                        { time: '09:30 - 09:45', subject: 'Istirahat' },
+                        { time: '09:45 - 11:15', subject: 'Sejarah' },
+                        { time: '11:15 - 12:00', subject: 'BK' },
+                        { time: '12:00 - 12:45', subject: 'Istirahat' },
+                        { time: '12:45 - 15:00', subject: 'Bahasa Inggris' },
+                    ]
+                },
+                {
+                    day: 'Rabu',
+                    details: [
+                        { time: '06:30 - 08:00', subject: 'Pendidikan Pancasila' },
+                        { time: '08:00 - 09:30', subject: 'Informatika' },
+                        { time: '09:30 - 09:45', subject: 'Istirahat' },
+                        { time: '09:45 - 12:00', subject: 'Fisika' },
+                        { time: '12:00 - 12:45', subject: 'Istirahat' },
+                        { time: '12:45 - 15:00', subject: 'Geografi' },
+                    ]
+                },
+                {
+                    day: 'Kamis',
+                    details: [
+                        { time: '06:30 - 08:00', subject: 'Fisika' },
+                        { time: '08:00 - 09:30', subject: 'Agama' },
+                        { time: '09:30 - 09:45', subject: 'Istirahat' },
+                        { time: '09:45 - 12:00', subject: 'Biologi' },
+                        { time: '12:00 - 12:45', subject: 'Istirahat' },
+                        { time: '12:45 - 15:00', subject: 'Matematika' },
+                    ]
+                },
+                {
+                    day: 'Jumat',
+                    details: [
+                        { time: '06:30 - 07:10', subject: 'Pembiasaan' },
+                        { time: '07:10 - 08:30', subject: 'Prakarya' },
+                        { time: '08:30 - 09:10', subject: 'Seni Budaya' },
+                        { time: '09:10 - 09:25', subject: 'Istirahat' },
+                        { time: '09:25 - 10:05', subject: 'Seni Budaya' },
+                        { time: '10:05 - 11:25', subject: 'Biologi' },
+                        { time: '11:25 - 12:45', subject: 'Istirahat' },
+                        { time: '12:45 - 15:00', subject: 'P8' },
+                    ]
+                },
             ],
             showModal: false,
             modalContent: { title: '', body: '' },
@@ -143,6 +208,12 @@
             const today = getCurrentDate();
             const existingRecord = state.attendance.find(a => a.username === state.currentUser.username && a.date === today);
             if (existingRecord) { showModal('Informasi', '<p>Anda sudah melakukan check-in hari ini.</p>'); return; }
+
+            const existingPermission = state.permissions.find(p => p.username === state.currentUser.username && p.date === today && (p.status === 'Disetujui' || p.status === 'Menunggu Persetujuan'));
+            if (existingPermission) {
+                showModal('Informasi', `<p>Anda tidak dapat check-in karena sudah mengajukan <strong>${existingPermission.type}</strong> pada hari ini dengan status <strong>${existingPermission.status}</strong>.</p>`);
+                return;
+            }
 
             const modalBody = `
                 <p class="text-sm text-gray-600 mb-4">Silakan ambil foto selfie sebagai bukti kehadiran.</p>
@@ -301,7 +372,7 @@
 
         // === TEMPLATES / COMPONENTS ===
         function LoginPage() {
-            return `<div class="w-full max-w-md mx-auto"><div class="bg-white shadow-2xl rounded-2xl px-8 pt-6 pb-8 mb-4"><div class="text-center mb-8"><i class="fas fa-user-check text-5xl text-pink-500"></i><h1 class="text-3xl font-bold text-gray-800 mt-2">Absensi Online</h1><p class="text-gray-500">Silakan login ke akun Anda</p></div><form id="login-form"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="username">Username</label><input class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="username" type="text" placeholder="Username" required></div><div class="mb-6"><label class="block text-gray-700 text-sm font-bold mb-2" for="password">Password</label><input class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="password" type="password" placeholder="******************" required></div><button class="gradient-bg w-full text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transform hover:scale-105 transition-transform duration-300" type="submit">Login</button></form><div class="mt-6 text-xs text-center text-gray-500"><p class="font-bold">Akun Demo:</p><p>Siswa: (username: siswa1, pass: 123)</p><p>Guru: (username: guru, pass: guru123)</p></div></div></div>`;
+            return `<div class="w-full max-w-md mx-auto"><div class="bg-white shadow-2xl rounded-2xl px-8 pt-6 pb-8 mb-4"><div class="text-center mb-8"><i class="fas fa-user-check text-5xl text-pink-500"></i><h1 class="text-3xl font-bold text-gray-800 mt-2">Absensi Online</h1><p class="text-gray-500">Silakan login ke akun Anda</p></div><form id="login-form"><div class="mb-4"><label class="block text-gray-700 text-sm font-bold mb-2" for="username">Username</label><input class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="username" type="text" placeholder="Username" required></div><div class="mb-6"><label class="block text-gray-700 text-sm font-bold mb-2" for="password">Password</label><input class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500" id="password" type="password" placeholder="******************" required></div><button class="gradient-bg w-full text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transform hover:scale-105 transition-transform duration-300" type="submit">Login</button></form><div class="mt-6 text-xs text-center text-gray-500"><p class="font-bold">Akun Demo:</p><p>Siswa: (username: siswa1...siswa36, pass: 123)</p><p>Guru: (username: guru, pass: guru123)</p></div></div></div>`;
         }
 
         function SiswaDashboard() {
@@ -359,8 +430,22 @@
                         </div>
                         <div class="lg:col-span-1">
                              <div class="bg-white p-6 rounded-2xl shadow-lg">
-                                 <h2 class="text-xl font-bold mb-4 text-gray-700">Jadwal Mengajar</h2>
-                                 <div class="space-y-4">${state.schedules.map(sch => `<div class="border-l-4 border-pink-500 pl-4 py-2 bg-pink-50 rounded-r-lg"><p class="font-bold">${sch.day} - ${sch.subject}</p><p class="text-sm text-gray-600">${sch.time}</p></div>`).join('')}</div>
+                                 <h2 class="text-xl font-bold mb-4 text-gray-700">Jadwal Pelajaran</h2>
+                                 <div class="space-y-4">
+                                    ${state.schedules.map(daySchedule => `
+                                        <div class="p-4 bg-pink-50 rounded-lg shadow-inner">
+                                            <p class="font-bold text-md mb-2 text-pink-700 border-b border-pink-200 pb-1">${daySchedule.day}</p>
+                                            <div class="space-y-1">
+                                                ${daySchedule.details.map(item => `
+                                                    <div class="flex justify-between items-center text-sm ${item.subject === 'Istirahat' ? 'text-gray-400 italic' : 'text-gray-700'}">
+                                                        <span>${item.time}</span>
+                                                        <span class="font-medium text-right">${item.subject}</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                 </div>
                              </div>
                         </div>
                     </main>
@@ -397,5 +482,3 @@
     </script>
 </body>
 </html>
-
-
